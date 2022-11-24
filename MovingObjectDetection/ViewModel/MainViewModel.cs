@@ -1,6 +1,13 @@
 using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using MovingObjectDetection.Utils;
 using OpenCvSharp;
+using OpenCvSharp.Blob;
+using System.Drawing;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
 namespace MovingObjectDetection.ViewModel
@@ -74,5 +81,84 @@ namespace MovingObjectDetection.ViewModel
             }
         }
         #endregion
+
+        private void LoadVideoFile()
+        {
+            using (CommonOpenFileDialog dialog = new CommonOpenFileDialog())
+            {
+                dialog.Multiselect = false;
+                dialog.IsFolderPicker = false;
+                dialog.Filters.Add(new CommonFileDialogFilter($"AVI", ".AVI"));
+
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    ReadVideo(dialog.FileName);
+                }
+            }
+        }
+
+        private void ReadVideo(string filePath)
+        {
+            VideoCapture video = new VideoCapture(filePath);
+            Mat frame = new Mat();
+
+            Task.Run(() =>
+            {
+                while (video.PosFrames != video.FrameCount)
+                {
+                    video.Read(frame);
+                    SendImageAction(frame);
+                    Thread.Sleep(100);
+                }
+            });
+        }
+
+        private void SendImageAction(Mat obj)
+        {
+            _mog.Apply(obj, _remove);
+
+            // Mat result = new Mat(obj.Size(), MatType.CV_8UC3);
+            CvBlobs blobs = new CvBlobs();
+            blobs.Label(_remove);
+            foreach (var pair in blobs)
+            {
+                CvBlob blob = pair.Value;
+                if (blob.Area < 100)
+                    continue;
+                Cv2.Rectangle(obj, new OpenCvSharp.Point(blob.MinX, blob.MinY), new OpenCvSharp.Point(blob.MaxX, blob.MaxY), Scalar.Red, 1, LineTypes.AntiAlias);
+            }
+
+            //CvBlob maxBlob = blobs.GreaterBlob();
+
+            //if (maxBlob != null)
+            //{
+            //    if (maxBlob.Area > 500)
+            //        Cv2.Rectangle(obj, new OpenCvSharp.Point(maxBlob.MinX, maxBlob.MinY), new OpenCvSharp.Point(maxBlob.MaxX, maxBlob.MaxY), Scalar.Red, 1, LineTypes.AntiAlias);
+            //}
+
+            Image = MatToBitmapImage(obj);
+        }
+
+        private BitmapImage MatToBitmapImage(Mat obj)
+        {
+            BitmapImage resultBitmapImage;
+            Bitmap tempBitmap = OpenCvSharp.Extensions.BitmapConverter.ToBitmap(obj);
+
+            if (tempBitmap == null)
+                return null;
+
+            using (MemoryStream memory = new MemoryStream())
+            {
+                tempBitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Bmp);
+                memory.Position = 0;
+                resultBitmapImage = new BitmapImage();
+                resultBitmapImage.BeginInit();
+                resultBitmapImage.StreamSource = memory;
+                resultBitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                resultBitmapImage.EndInit();
+                resultBitmapImage.Freeze();
+            }
+            return resultBitmapImage;
+        }
     }
 }

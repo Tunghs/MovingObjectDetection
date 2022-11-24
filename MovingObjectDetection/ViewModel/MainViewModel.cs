@@ -45,7 +45,34 @@ namespace MovingObjectDetection.ViewModel
 
         public MainViewModel()
         {
+            _mog = BackgroundSubtractorKNN.Create();
+            //_CamModule = new WebCamModule();
+            //Exposure = 100;
+            //Focus = 100;
 
+            //_CamModule.SetImageDeviceParam(Exposure, Focus);
+            //_CamModule.ImageSendAction += SendImageAction;
+
+            //_CamModule.StartGrabContinuous();
+            InitRelayCommand();
         }
+
+        #region Command
+        public RelayCommand<object> MenuClickCommand { get; private set; }
+        private void InitRelayCommand()
+        {
+            MenuClickCommand = new RelayCommand<object>(OnMenuClick);
+        }
+
+        private void OnMenuClick(object obj)
+        {
+            switch (obj.ToString())
+            {
+                case "Load":
+                    LoadVideoFile();
+                    break;
+            }
+        }
+        #endregion
     }
 }

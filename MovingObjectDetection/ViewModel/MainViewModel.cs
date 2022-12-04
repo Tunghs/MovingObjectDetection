@@ -9,6 +9,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace MovingObjectDetection.ViewModel
 {
@@ -17,6 +19,7 @@ namespace MovingObjectDetection.ViewModel
         private BitmapImage _Image;
         private BackgroundSubtractorKNN _mog;
         Mat _remove = new Mat();
+        Mat mask;
 
         public BitmapImage Image
         {
@@ -52,6 +55,7 @@ namespace MovingObjectDetection.ViewModel
 
         public MainViewModel()
         {
+            mask = Cv2.ImRead(@"D:\mask.png", ImreadModes.Grayscale);
             _mog = BackgroundSubtractorKNN.Create();
             //_CamModule = new WebCamModule();
             //Exposure = 100;
@@ -62,6 +66,19 @@ namespace MovingObjectDetection.ViewModel
 
             //_CamModule.StartGrabContinuous();
             InitRelayCommand();
+        }
+
+        private void TestImage()
+        {
+            Mat src = Cv2.ImRead(@"C:\Users\dljdg\Documents\ss\frame148.png", ImreadModes.Unchanged);
+            Cv2.CvtColor(src, src, ColorConversionCodes.BGR2GRAY);
+            Cv2.BitwiseAnd(src, mask, src);
+            Cv2.GaussianBlur(src, src, new OpenCvSharp.Size(0, 0), 1.0);
+            Cv2.AdaptiveThreshold(src, src, 150, AdaptiveThresholdTypes.MeanC, ThresholdTypes.Binary, 25, 5);
+
+            Cv2.Absdiff(src, background, src);
+            // Cv2.GaussianBlur(src, src, new OpenCvSharp.Size(0, 0), 1.0);
+            Image = MatToBitmapImage(src);
         }
 
         #region Command

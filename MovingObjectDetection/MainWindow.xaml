@@ -20,8 +20,8 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         
-        <Image Source="{Binding Image}"/>
+        <Image Source="{Binding SrcImage}"/>
 
-        <Image Source="{Binding Image}"/>
+        <Image Source="{Binding DstImage}"/>
     </Grid>
 </Mah:MetroWindow>

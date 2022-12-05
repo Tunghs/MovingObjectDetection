@@ -4,10 +4,12 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using MovingObjectDetection.Utils;
 using OpenCvSharp;
 using OpenCvSharp.Blob;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using System.Windows.Media.Imaging;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
@@ -17,12 +19,16 @@ namespace MovingObjectDetection.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-
+        #region Fields
         private BackgroundSubtractorKNN _mog;
         Mat _remove = new Mat();
         Mat mask;
         Mat background;
 
+        private List<int>[,] backgroundArray = new List<int>[480,640];
+        #endregion
+
+        #region UI Variable
         private BitmapImage srcImage;
         public BitmapImage SrcImage
         {
@@ -36,46 +42,33 @@ namespace MovingObjectDetection.ViewModel
             get { return dstImage; }
             set { Set(ref dstImage, value); }
         }
-
-        private int _Exposure;
-        public int Exposure
-        {
-            get { return _Exposure; }
-            set
-            {
-                _Exposure = value;
-                _CamModule?.SetImageDeviceParam(Exposure, Focus);
-                RaisePropertyChanged("Exposure");
-            }
-        }
-
-        private int _Focus;
-        public int Focus
-        {
-            get { return _Focus; }
-            set
-            {
-                _Focus = value;
-                _CamModule?.SetImageDeviceParam(Exposure, Focus);
-                RaisePropertyChanged("Focus");
-            }
-        }
-
-        private WebCamModule _CamModule;
+        #endregion
 
         public MainViewModel()
         {
             mask = Cv2.ImRead(@"D:\mask.png", ImreadModes.Grayscale);
             _mog = BackgroundSubtractorKNN.Create();
-            //_CamModule = new WebCamModule();
-            //Exposure = 100;
-            //Focus = 100;
-
-            //_CamModule.SetImageDeviceParam(Exposure, Focus);
-            //_CamModule.ImageSendAction += SendImageAction;
-
-            //_CamModule.StartGrabContinuous();
             InitRelayCommand();
+        }
+
+        private void Run(string filePath)
+        {
+            VideoCapture video = new VideoCapture(filePath);
+            Mat frame = new Mat();
+
+            Task.Run(() =>
+            {
+                while (video.PosFrames != video.FrameCount)
+                {
+                    video.Read(frame);
+                    CreateBackground(frame);
+                }
+            });
+        }
+
+        private void CreateBackground(Mat img)
+        {
+
         }
 
         private void TestImage()

@@ -14,6 +14,14 @@
     </Window.DataContext>
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Image Source="{Binding Image}"/>
+
         <Image Source="{Binding Image}"/>
     </Grid>
 </Mah:MetroWindow>

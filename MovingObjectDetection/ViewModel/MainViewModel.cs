@@ -11,20 +11,30 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
+using Task = System.Threading.Tasks.Task;
 
 namespace MovingObjectDetection.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
-        private BitmapImage _Image;
+
         private BackgroundSubtractorKNN _mog;
         Mat _remove = new Mat();
         Mat mask;
+        Mat background;
 
-        public BitmapImage Image
+        private BitmapImage srcImage;
+        public BitmapImage SrcImage
         {
-            get { return _Image; }
-            set { Set(ref _Image, value); }
+            get { return srcImage; }
+            set { Set(ref srcImage, value); }
+        }
+
+        private BitmapImage dstImage;
+        public BitmapImage DstImage
+        {
+            get { return dstImage; }
+            set { Set(ref dstImage, value); }
         }
 
         private int _Exposure;
@@ -78,7 +88,7 @@ namespace MovingObjectDetection.ViewModel
 
             Cv2.Absdiff(src, background, src);
             // Cv2.GaussianBlur(src, src, new OpenCvSharp.Size(0, 0), 1.0);
-            Image = MatToBitmapImage(src);
+            SrcImage = MatToBitmapImage(src);
         }
 
         #region Command
@@ -153,7 +163,7 @@ namespace MovingObjectDetection.ViewModel
             //        Cv2.Rectangle(obj, new OpenCvSharp.Point(maxBlob.MinX, maxBlob.MinY), new OpenCvSharp.Point(maxBlob.MaxX, maxBlob.MaxY), Scalar.Red, 1, LineTypes.AntiAlias);
             //}
 
-            Image = MatToBitmapImage(obj);
+            SrcImage = MatToBitmapImage(obj);
         }
 
         private BitmapImage MatToBitmapImage(Mat obj)
